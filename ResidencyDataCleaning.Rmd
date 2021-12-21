@@ -34,7 +34,6 @@ residency_data_clean <- function(res_data) {
   
   #Geocoding Addresses:
   library(ggmap)
-  register_google(key = "AIzaSyDnw3jUjDFlipa2w1CZ-rXz_9KqXVQAeGE")
   coord <- geocode(res_data3$Address)
 
   res_data4 <- cbind(res_data3, coord)
