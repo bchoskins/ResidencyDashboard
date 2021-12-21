@@ -1,0 +1,69 @@
+---
+title: "Residency Data Cleaning"
+author: "Brady Hoskins"
+date: "12/17/2021"
+output: html_document
+---
+
+Function to clean data:
+```{r}
+
+residency_data_clean <- function(res_data) {
+  #Don't care about effective data or program director:
+  library(dplyr)
+  res_data <- res_data %>%
+    select(-c(3,5))
+  
+  #Data cleaning beginning with removing program number from first feature:
+  library(tidyr)
+  res_data2 <- res_data %>%
+    separate(., `Program Number / Name`, 
+      into = c("Program Number", "Program Name"), sep="\\]") %>%
+    select(c(2:4))
+  
+  #Due to odd structure of data, start with definites (email address and phone number) that will show up at the end     and will be more consistent to split:
+  library(stringr)
+  res_data2$Email <- res_data2$Address %>%
+    str_extract(., "\\S*@\\S*")
+  
+  res_data2$Address <- res_data2$Address %>%
+    str_replace_all(., "\\S*@\\S*", "")
+
+  res_data3 <- res_data2 %>%
+    separate(., Address, into = c("Address", "Phone"), sep="(Ph: )") 
+  
+  #Geocoding Addresses:
+  library(ggmap)
+  register_google(key = "AIzaSyDnw3jUjDFlipa2w1CZ-rXz_9KqXVQAeGE")
+  coord <- geocode(res_data3$Address)
+
+  res_data4 <- cbind(res_data3, coord)
+}
+
+```
+
+Anesthiology:
+```{r}
+library(readxl)
+anesthesia <- read_excel("PublicListProgramsBySpecialty.xlsx", skip = 1)
+anesthesia  <- residency_data_clean(anesthesia)
+write.csv(anesthesia, "residency_clean.csv", row.names = FALSE)
+```
+
+Family Med:
+```{r}
+library(readxl)
+famMed <- read_excel("PublicListProgramsBySpecialty_FamilyMed.xlsx", skip = 1)
+famMed <- residency_data_clean(famMed)
+write.csv(famMed, "residency_clean_famMed.csv", row.names = FALSE)
+```
+
+Psychiatry:
+```{r}
+library(readxl)
+psych <- read_excel("PublicListProgramsBySpecialty_Pyschiatry.xlsx", skip = 1)
+psych <- residency_data_clean(psych)
+write.csv(psych, "residency_clean_psych.csv", row.names = FALSE)
+```
+
+
